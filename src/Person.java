@@ -1,19 +1,14 @@
-public class Person {
-    private final int personID;
+public class Person  extends Entity {
+    //private final int personID;
     private String personName;
     private String personGeschlecht;
 
     public Person(int personID, String Name, String geschlecht) {
-        this.personID = personID;
+        super(personID);
         this.personName = Name;
         this.personGeschlecht = geschlecht;
     }
-
-    public int getPersonID() {
-        return personID;
-    }
-
-    public String getPersonName() {
+    public String getName() {
         return personName;
     }
 

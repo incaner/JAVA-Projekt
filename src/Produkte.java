@@ -1,16 +1,14 @@
-public class Produkte {
-    private final int produktID;
+public class Produkte extends Entity{
+    //private final int produktID;
     private String ProduktName;
 
     public Produkte(int produktID, String Name){
-        this.produktID = produktID;
+        super(produktID);
+        //this.produktID = produktID;
         this.ProduktName = Name;
     }
 
-    public int getProduktID() {
-        return produktID;
-    }
-    public String getProduktName() {
+    public String getName() {
         return ProduktName;
     }
 
