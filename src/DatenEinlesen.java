@@ -1,123 +1,103 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.*;
+import java.util.*;
+
 public class DatenEinlesen {
-    private String dateipfad;
+    String dateipfad;
+    Map<Integer, Person> personMap = new HashMap<>();
+    Map<Integer, Produkte> produktMap = new HashMap<>();
+    Map<Integer, Firma> firmaMap = new HashMap<>();
+    List<Beziehungen> beziehungenList = new ArrayList<>();
 
-    public DatenEinlesen(String dateipfad) {
-        this.dateipfad = dateipfad;
+    public DatenEinlesen(String dateiPfad){
+        this.dateipfad = dateiPfad;
     }
-    public List<Produkte> produkteAusDateiEinlesen() {
-        List<Produkte> produkteList = new ArrayList<>();
-        boolean inProdukteAbschnitt = false;
-
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(dateipfad))) {
+    public void readData(String filepath) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(filepath))) {
             String line;
+            String entityType = "";
+
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith("New_Entity:")) {
-                    String entity = line.substring("New_Entity:".length()).trim();
-                    if (entity.equals("\"product_id\",\"product_name\"")) {
-                        inProdukteAbschnitt = true;
-                    } else {
-                        inProdukteAbschnitt = false;
-                    }
-                } else if (inProdukteAbschnitt) {
-                    String[] parts = line.split(",");
-                    if (parts.length == 2) {
-                        int id = Integer.parseInt(parts[0].trim().replaceAll("\"", ""));
-                        String name = parts[1].trim().replaceAll("\"", "");
-                        Produkte produkt = new Produkte(id, name);
-                        produkteList.add(produkt);
+                if (line.startsWith("New_Entity: ")) {
+                    entityType = line.replace("New_Entity: ", "").trim();
+                } else {
+                    String[] data = line.replace("\"", "").split(",");
+
+                    switch(entityType) {
+                        case "\"person_id\", \"person_name\", \"person_gender\"":
+                            int personId = Integer.parseInt(data[0]);
+                            if (!personMap.containsKey(personId)) {
+                                Person person = new Person(personId, data[1], data[2]);
+                                personMap.put(person.getPersonID(), person);
+                            }
+                            break;
+                        case "\"product_id\",\"product_name\"":
+                            int productId = Integer.parseInt(data[0]);
+                            if (!produktMap.containsKey(productId)) {
+                                Produkte produkt = new Produkte(productId, data[1]);
+                                produktMap.put(produkt.getProduktID(), produkt);
+                            }
+                            break;
+                        case "\"company_id\",\"company_name\"":
+                            int companyId = Integer.parseInt(data[0]);
+                            if (!firmaMap.containsKey(companyId)) {
+                                Firma firma = new Firma(companyId, data[1]);
+                                firmaMap.put(firma.getFirmaID(), firma);
+                            }
+                            break;
+                        case "\"person1_id\",\"person2_id\"":
+                            /*Beziehungen beziehung = new Beziehungen(Integer.parseInt(data[0]), Integer.parseInt(data[1]));
+                            beziehungenList.add(beziehung);
+                             */
+                            Person person1 = personMap.get(Integer.parseInt(data[0]));
+                            Person person2 = personMap.get(Integer.parseInt(data[1]));
+                            if (person1 != null && person2 != null) {
+                                person1.addFreund(person2);
+                                person2.addFreund(person1);  // Freundschaft ist gegenseitig
+                            }
+                            break;
+                        case "\"person_id\",\"product_id\"":
+                            Person pers = personMap.get(Integer.parseInt(data[0]));
+                            Produkte prod = produktMap.get(Integer.parseInt(data[1]));
+                            if (pers != null && prod != null) {
+                                pers.addProdukt(prod);
+                            }
+                            break;
+                        case "\"product_id\",\"company_id\"":
+                            Produkte produk = produktMap.get(Integer.parseInt(data[0]));
+                            Firma firm = firmaMap.get(Integer.parseInt(data[1]));
+                            if (produk != null && firm != null) {
+                                produk.addFirma(firm);
+                            }
+                            break;
+                        default:
+                            break;
                     }
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        return produkteList;
     }
-    public List<Person> personenAusDateiEinlesen() {
-        List<Person> personList = new ArrayList<>();
-        boolean inPersonenAbschnitt = false;
+    public List<Person> suchePersonen(String suchbegriff) {
+        List<Person> ergebnis = new ArrayList<>();
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(dateipfad))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.startsWith("New_Entity:")) {
-                    String entity = line.substring("New_Entity:".length()).trim();
-                    if (entity.equals("\"person_id\", \"person_name\", \"person_gender\"")) {
-                        inPersonenAbschnitt = true;
-                    } else {
-                        inPersonenAbschnitt = false;
-                    }
-                } else if (inPersonenAbschnitt) {
-                    String[] parts = line.split(",");
-                    if (parts.length == 3) {
-                        int id = Integer.parseInt(parts[0].trim().replaceAll("\"", ""));
-                        String name = parts[1].trim().replaceAll("\"", "");
-                        String geschlecht = parts[2].trim().replaceAll("\"", "");
-                        Person person = new Person(id,name,geschlecht);
-                        personList.add(person);
-
-                    }
-                }
+        for (Person person : personMap.values()) {
+            if (person.getPersonName().toLowerCase().contains(suchbegriff.toLowerCase())) {
+                ergebnis.add(person);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        }
+        return ergebnis;
+    }
+
+    public List<Produkte> sucheProdukte(String suchbegriff) {
+        List<Produkte> ergebnis = new ArrayList<>();
+
+        for (Produkte produkt : produktMap.values()) {
+            if (produkt.getProduktName().toLowerCase().contains(suchbegriff.toLowerCase())) {
+                ergebnis.add(produkt);
+            }
         }
 
-        return personList;
+        return ergebnis;
     }
-    public List<Entity> datenAusDateiEinlesen() {
-        List<Entity> entityList = new ArrayList<>();
-        boolean inProdukteAbschnitt = false;
-        boolean inPersonenAbschnitt = false;
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(dateipfad))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.startsWith("New_Entity:")) {
-                    String entity = line.substring("New_Entity:".length()).trim();
-                    if (entity.equals("\"product_id\",\"product_name\"")) {
-                        inProdukteAbschnitt = true;
-                        inPersonenAbschnitt = false;
-                    } else if (entity.equals("\"person_id\",\"person_name\",\"person_gender\"")) {
-                        inProdukteAbschnitt = false;
-                        inPersonenAbschnitt = true;
-                    } else {
-                        inProdukteAbschnitt = false;
-                        inPersonenAbschnitt = false;
-                    }
-                } else if (inProdukteAbschnitt) {
-                    // Verarbeite Produkte
-                    String[] parts = line.split(",");
-                    if (parts.length == 2) {
-                        int id = Integer.parseInt(parts[0].trim().replaceAll("\"", ""));
-                        String name = parts[1].trim().replaceAll("\"", "");
-                        Produkt produkt = new Produkt(id, name);
-                        entityList.add(produkt);
-                    }
-                } else if (inPersonenAbschnitt) {
-                    // Verarbeite Personen
-                    String[] parts = line.split(",");
-                    if (parts.length == 3) {
-                        int id = Integer.parseInt(parts[0].trim().replaceAll("\"", ""));
-                        String name = parts[1].trim().replaceAll("\"", "");
-                        String gender = parts[2].trim().replaceAll("\"", "");
-                        Person person = new Person(id, name, gender);
-                        entityList.add(person);
-                    }
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return entityList;
-    }
-
 }
