@@ -33,4 +33,27 @@ public class Person {
     public void addFreund(Person freund) {
         this.freunde.add(freund);
     }
+
+    public List<Produkte> getGekaufteProdukte() {
+        return gekaufteProdukte;
+    }
+
+    public List<Person> getFreunde() {
+        return freunde;
+    }
+
+    public boolean hatProduktVonFirma(Firma firma) {
+        for (Produkte produkt : this.gekaufteProdukte) {
+            if (produkt.getZugehoerigeFirma().equals(firma)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return "Person [id=" + personID + ", name=" + personName + ", gender=" + personGeschlecht + ", gekaufte Produkte=" + gekaufteProdukte + "]";
+    }
+
 }

@@ -6,8 +6,6 @@ public class DatenEinlesen {
     Map<Integer, Person> personMap = new HashMap<>();
     Map<Integer, Produkte> produktMap = new HashMap<>();
     Map<Integer, Firma> firmaMap = new HashMap<>();
-    List<Beziehungen> beziehungenList = new ArrayList<>();
-
     public DatenEinlesen(String dateiPfad){
         this.dateipfad = dateiPfad;
     }
@@ -66,7 +64,7 @@ public class DatenEinlesen {
                             Produkte produk = produktMap.get(Integer.parseInt(data[0]));
                             Firma firm = firmaMap.get(Integer.parseInt(data[1]));
                             if (produk != null && firm != null) {
-                                produk.addFirma(firm);
+                                produk.setZugehoerigeFirma(firm);
                             }
                             break;
                         default:
@@ -88,6 +86,14 @@ public class DatenEinlesen {
         }
         return ergebnis;
     }
+    public Person suchePerson(int iD){
+        for (Person person : personMap.values()){
+            if (person.getPersonID() == iD){
+                return person;
+            }
+        }
+        return null;
+    }
 
     public List<Produkte> sucheProdukte(String suchbegriff) {
         List<Produkte> ergebnis = new ArrayList<>();
@@ -99,5 +105,45 @@ public class DatenEinlesen {
         }
 
         return ergebnis;
+    }
+
+    public List<Produkte> getProduktNetzwerk(int personID) {
+        Person person = personMap.get(personID);
+        if (person == null) {
+            return Collections.emptyList();
+        }
+
+        List<Produkte> personProdukte = person.getGekaufteProdukte();
+        List<Produkte> produktNetzwerk = new ArrayList<>();
+
+        for (Person freund : person.getFreunde()) {
+            for (Produkte produkt : freund.getGekaufteProdukte()) {
+                if (!personProdukte.contains(produkt) && !produktNetzwerk.contains(produkt)) {
+                    produktNetzwerk.add(produkt);
+                }
+            }
+        }
+        // Sortieren der Produktliste nach Name
+        produktNetzwerk.sort(Comparator.comparing(Produkte::getProduktName));
+
+        return produktNetzwerk;
+    }
+    public List<Firma> getFirmenNetzwerk(int personID) {
+        Person person = suchePerson(personID);
+        if (person == null) {
+            return new ArrayList<>();
+        }
+        Set<Firma> firmenNetzwerk = new HashSet<>();
+        for (Person freund : person.getFreunde()) {
+            for (Produkte produkt : freund.getGekaufteProdukte()) {
+                Firma firma = produkt.getZugehoerigeFirma();
+                if (firma != null && !person.hatProduktVonFirma(firma)) {
+                    firmenNetzwerk.add(firma);
+                }
+            }
+        }
+        List<Firma> firmenListe = new ArrayList<>(firmenNetzwerk);
+        firmenListe.sort(Comparator.comparing(Firma::getFirmaName));
+        return firmenListe;
     }
 }
