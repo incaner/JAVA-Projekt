@@ -3,7 +3,9 @@ public class Person {
     private final int personID;
     private String personName;
     private String personGeschlecht;
-
+    //Jede Person hat eine Liste. Dort werden alle Produkte und Personen abgespeichert,
+    //mit denen die Person eine Beziehung hat. So umgehe ich meinen ersten Versuch
+    //von einer extra Beziehungsklasse.
     private List<Produkte> gekaufteProdukte;
     private List<Person> freunde;
 
@@ -41,7 +43,8 @@ public class Person {
     public List<Person> getFreunde() {
         return freunde;
     }
-
+    //diese Methode erleichtert und verschönert die Überprüfung von Firmensuche.
+    //Es wird überprüft, ob die Person bei ein Produkt einer Firma hat.
     public boolean hatProduktVonFirma(Firma firma) {
         for (Produkte produkt : this.gekaufteProdukte) {
             if (produkt.getZugehoerigeFirma().equals(firma)) {

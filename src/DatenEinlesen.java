@@ -6,6 +6,7 @@ public class DatenEinlesen {
     Map<Integer, Person> personMap = new HashMap<>();
     Map<Integer, Produkte> produktMap = new HashMap<>();
     Map<Integer, Firma> firmaMap = new HashMap<>();
+    // Konstruktor der Klasse
     public DatenEinlesen(String dateiPfad){
         this.dateipfad = dateiPfad;
     }
@@ -18,10 +19,12 @@ public class DatenEinlesen {
                 if (line.startsWith("New_Entity: ")) {
                     entityType = line.replace("New_Entity: ", "").trim();
                 } else {
+                    // Aufteilen der Zeile in ihre Bestandteile und Entfernen von Anführungszeichen
                     String[] data = line.replace("\"", "").split(",");
-
+                    //Bei Jeder neuen Entität wird der erste String zusammengeschnitten und überprüft, welche Art von Objet erstellt werden muss.
                     switch(entityType) {
                         case "\"person_id\", \"person_name\", \"person_gender\"":
+                            //Erstellen einer Person und speichern in der Hashmap personMap
                             int personId = Integer.parseInt(data[0]);
                             if (!personMap.containsKey(personId)) {
                                 Person person = new Person(personId, data[1], data[2]);
@@ -43,9 +46,8 @@ public class DatenEinlesen {
                             }
                             break;
                         case "\"person1_id\",\"person2_id\"":
-                            /*Beziehungen beziehung = new Beziehungen(Integer.parseInt(data[0]), Integer.parseInt(data[1]));
-                            beziehungenList.add(beziehung);
-                             */
+                            //Hier werden die Beziehungen zwischen Personen festgelegt mit der funktion addFreund.
+                            //Es werden beide Personen anhand der ID gesucht und dann equivalente Freundschaften verteilt.
                             Person person1 = personMap.get(Integer.parseInt(data[0]));
                             Person person2 = personMap.get(Integer.parseInt(data[1]));
                             if (person1 != null && person2 != null) {
@@ -54,6 +56,7 @@ public class DatenEinlesen {
                             }
                             break;
                         case "\"person_id\",\"product_id\"":
+                            //Selbe Logik wie bei den Beziehungen, nur diesmal mit der addProdunkt Funktion von Produkte.
                             Person pers = personMap.get(Integer.parseInt(data[0]));
                             Produkte prod = produktMap.get(Integer.parseInt(data[1]));
                             if (pers != null && prod != null) {
@@ -73,12 +76,15 @@ public class DatenEinlesen {
                 }
             }
         } catch (IOException e) {
+            // Ausgabe von Fehlern, die während des Lesens der Datei passieren können
             e.printStackTrace();
         }
     }
+    // Methode zur Suche von Personen nach einem Suchbegriff -> in diesem Fall der Name.
+    // Sucht alle Personen und gibt eine Liste von Personen zurück,
+    // sobald ein Teil vom Suchbegriff im Namen gefunden wird.
     public List<Person> suchePersonen(String suchbegriff) {
         List<Person> ergebnis = new ArrayList<>();
-
         for (Person person : personMap.values()) {
             if (person.getPersonName().toLowerCase().contains(suchbegriff.toLowerCase())) {
                 ergebnis.add(person);
@@ -86,6 +92,8 @@ public class DatenEinlesen {
         }
         return ergebnis;
     }
+    // Methode zur Suche einer Person nach ID
+    // Durchsucht alle Personen und gibt die Person zurück, deren ID der gesuchten ID entspricht.
     public Person suchePerson(int iD){
         for (Person person : personMap.values()){
             if (person.getPersonID() == iD){
@@ -94,7 +102,9 @@ public class DatenEinlesen {
         }
         return null;
     }
-
+    // Methode zur Suche von Produkten nach einem Suchbegriff
+    // Sucht alle Produkte und gibt eine Liste von Produkten zurück,
+    // sobald ein Teil vom Suchbegriff im Namen gefunden wird.
     public List<Produkte> sucheProdukte(String suchbegriff) {
         List<Produkte> ergebnis = new ArrayList<>();
 
@@ -106,7 +116,14 @@ public class DatenEinlesen {
 
         return ergebnis;
     }
-
+    /* Methode zur Erstellung eines Produkt-Netzwerks für eine bestimmte Person
+     Zuerst wird Person anhand ihrer ID aus der personMap gesucht.
+     Wenn die Person existiert, wird durch die Liste ihrer Freunde iteriert.
+     Für jeden Freund wird dann die Liste seiner gekauften Produkte durchlaufen.
+     Dann wird überprüft, ob das Produkt bereits in produktNetzwerk vorhanden ist.
+     Wenn nein, wird es zum produktNetzwerk hinzugefügt.
+     Schließlich wird das Netzwerk sortiert und zurückgegeben.
+     */
     public List<Produkte> getProduktNetzwerk(int personID) {
         Person person = personMap.get(personID);
         if (person == null) {
@@ -128,6 +145,15 @@ public class DatenEinlesen {
 
         return produktNetzwerk;
     }
+
+    /* Methode zur Erstellung eines Firmen-Netzwerks
+    Wie bei der getProduktNetzwerk-Methode wird zuerst die Person anhand ihrer ID gesucht.
+    Wenn die Person existiert, wird durch die Liste ihrer Freunde iteriert.
+    Für jeden Freund wird die Liste seiner gekauften Produkte durchlaufen.
+    Die zugehörige Firma jedes Produkts wird ermittelt.
+    Wenn die Firma existiert und die Person selbst noch kein Produkt von dieser Firma gekauft hat,
+    wird die Firma zum firmenNetzwerk hinzugefügt. Schließlich wird es nach den Namen der Firmen sortiert.
+    */
     public List<Firma> getFirmenNetzwerk(int personID) {
         Person person = suchePerson(personID);
         if (person == null) {

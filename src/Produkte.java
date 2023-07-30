@@ -15,6 +15,7 @@ public class Produkte {
         return produktName;
     }
 
+    //Da ein Produkt nur von einer Firma hergestellt wird, kann es als Variable und nicht als Liste gespeichert werden.
     public void setZugehoerigeFirma(Firma zugehoerigeFirma) {
         this.zugehoerigeFirma = zugehoerigeFirma;
     }

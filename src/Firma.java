@@ -13,4 +13,9 @@ public class Firma {
     public String getFirmaName() {
         return firmaName;
     }
+
+    @Override
+    public String toString() {
+        return "Firma [id=" + firmaID + ", name=" + firmaName+"]";
+    }
 }
